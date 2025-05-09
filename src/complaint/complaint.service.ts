@@ -1,13 +1,16 @@
 import { Injectable } from '@nestjs/common';
+import { HttpService } from '@nestjs/axios';
 import { getFirestore } from 'firebase-admin/firestore';
 import { initializeApp, getApps } from 'firebase-admin/app';
 import { getAuth } from 'firebase-admin/auth';
 import { ComplaintDto } from './dto/complaint.dto';
+import { firstValueFrom } from 'rxjs';
+import { NominatimResponse } from 'src/types/nominatim.type';
 @Injectable()
 export class ComplaintService {
   private firestore;
 
-  constructor() {
+  constructor(private readonly httpService: HttpService) {
     if (!getApps().length) {
       initializeApp({
         projectId: "hacka-recolhe",
@@ -59,5 +62,27 @@ export class ComplaintService {
     } catch (error) {
       throw new Error(`Error updating complaint: ${error.message}`);
     }
+  }
+
+  async reverseGeocode(lat: string, lon: string): Promise<String> {
+    const url = 'https://nominatim.openstreetmap.org/reverse';
+    const params = {
+      lat,
+      lon,
+      format: 'json',
+      addressdetails: '1',
+    };
+
+    const headers = {
+      'User-Agent': 'recolhe-app/1.0 (lucass.dcss75@gmail.com)', // obrigatório para Nominatim
+    };
+
+    const response = await firstValueFrom(
+      this.httpService.get(url, { params, headers })
+    ).then((response) => {
+      return response.data as NominatimResponse
+    });
+    
+    return `${response.address.road || ''}, ${response.address.house_number || ''}, ${response.address.suburb || ''}`;
   }
 } 

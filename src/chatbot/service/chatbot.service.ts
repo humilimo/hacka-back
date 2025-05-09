@@ -1,5 +1,6 @@
 // src/whatsapp/whatsapp.service.ts
 import { Injectable, OnModuleInit } from '@nestjs/common';
+import { ComplaintService } from 'src/complaint/complaint.service';
 const venom = require('venom-bot');
 
 interface UserState {
@@ -8,6 +9,7 @@ interface UserState {
 
 @Injectable()
 export class ChatbotService implements OnModuleInit {
+    constructor(private readonly complaintService: ComplaintService) {}
     private userStates: Record<string, UserState> = {};
 
     async onModuleInit() {
@@ -87,7 +89,7 @@ Confira as opções abaixo e escolha a que melhor atende à sua necessidade:
                     return;
                 }
                 else {
-                    await client.sendText(userId, 'Você não enviou a localização! ⛔, tente novamente ou digite 0 para voltar ao menu!');
+                    await client.sendText(userId, '⛔ Você não enviou a localização! Tente novamente ou digite 0 para voltar ao menu.');
                     user.step = 2;
                     return;
                 }
@@ -118,7 +120,7 @@ Confira as opções abaixo e escolha a que melhor atende à sua necessidade:
                     return;
                 }
                 else {
-                    await client.sendText(userId, 'Você não a localização! ⛔, tente novamente ou digite 0 para voltar ao menu!');
+                    await client.sendText(userId, 'Você não enviou a localização! ⛔, tente novamente ou digite 0 para voltar ao menu!');
                     user.step = 2;
                     return;
                 }

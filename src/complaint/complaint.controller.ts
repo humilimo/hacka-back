@@ -11,6 +11,11 @@ export class ComplaintController {
     return this.complaintService.getComplaints(phoneNumber);
   }
 
+  @Get('/address') //endereco
+  async getAddress(@Query('phoneNumber') phoneNumber: string) {
+    return this.complaintService.getComplaints(phoneNumber);
+  }
+
   @Post()
   async createComplaint(@Body() complaintDto: ComplaintDto) {
     return this.complaintService.createComplaint(complaintDto);
