@@ -6,8 +6,8 @@ export class DumpsterController {
   constructor(private readonly dumpsterService: DumpsterService) {}
 
   @Patch(':id')
-  async updateDumpster(@Param('id') id: string, @Body() dumpsterDto: DumpsterDto) {
-    return this.dumpsterService.updateDumpster(id, dumpsterDto);
+  async updateDumpster(@Param('id') id: string, @Body() weight: number) {
+    return this.dumpsterService.updateDumpster(id, weight);
   }
 
   @Get('nearby')
