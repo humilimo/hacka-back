@@ -17,7 +17,7 @@ export class UsersService {
     this.firestore = getFirestore();
   }
 
-  async getUserBalanceByPhone(phoneNumber: string): Promise<{ balance: number }> {
+  async getUserBalanceByPhone(phoneNumber: string): Promise<{ balance: number, pendingBalance: number }> {
     try {
       const usersRef = this.firestore.collection('users');
       const querySnapshot = await usersRef.where('phoneNumber', '==', phoneNumber).get();
@@ -30,7 +30,8 @@ export class UsersService {
       const userData = userDoc.data();
 
       return {
-        balance: userData.balance || 0
+        balance: userData.balance || 0,
+        pendingBalance: userData.pendingBalance || 0
       };
     } catch (error) {
       throw new Error(`Error getting user balance: ${error.message}`);

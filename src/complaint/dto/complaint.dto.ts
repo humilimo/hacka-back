@@ -4,6 +4,6 @@ export class ComplaintDto {
   longitude: number;
   address: string;
   createdAt: Date;
-  solvedAt: Date;
-  solved: boolean;
+  approvedAt: Date;
+  approved: boolean;
 }
