@@ -28,6 +28,7 @@ export class ChatbotService implements OnModuleInit {
       if (message.isGroupMsg) return;
 
       const userId = message.from;
+      const messageType = message.type;
       const msg = message.body.toLowerCase();
 
       if (!this.userStates[userId]) {
@@ -60,34 +61,100 @@ Confira as opções abaixo e escolha a que melhor atende à sua necessidade:
             await client.sendText(
                 userId,
                 `Para registrar sua denúncia, precisamos da localização exata do descarte irregular. Você pode nos enviar sua localização atual pelo whatsapp.
-                📍`
+                Caso deseje voltar ao menu digite 0.`
               );
-              await new Promise(resolve => setTimeout(resolve, 4000));
-              if (message.type === 'location') {
-                const latitude = message.lat;
-                const longitude = message.lng;
-              
-                await client.sendText(userId, `📍 Localização recebida. 
-                Para prosseguir com a denúncia, por favor, nos envie uma foto local de descarte irregular.`);
-                if (message.type === 'image') {
-                    await client.sendText(userId, '📸 Imagem recebida com sucesso! Você será redirecionado ao menu, obrigado.');
-                } else {
-                    await client.sendText(
-                        userId,
-                        `Você não enviou a localização. Tente novamente.`
-                      );
-                    user.step = 0
-                  }
-                return;
-              } else {
-                await client.sendText(
-                    userId,
-                    `Você não enviou a localização. Tente novamente.`
-                  );
-                user.step = 0
-              }
+              user.step = 5;
+              return
+        } else if (msg.includes('0')){
+            await this.voltarAoMenuPrincipal(client, userId, user);
+        }
+        else {
+            await client.sendText(userId, `Operação inválida. Digite 1 para continuar a denúncia ou 0 para voltar ao menu.`);
+            user.step = 1;
         }
         return;
+      }
+
+      if (user.step === 2) {
+        if (messageType === 'location') {
+            const { lat, lng } = message;
+
+            await client.sendText(userId, `📍 Localização recebida. Coordenadas de ${lat} (latitude) e ${lng} (longitude).
+            Para prosseguir com a denúncia, por favor, nos envie uma foto do local com descarte irregular.`);
+            user.step = 7;
+        } else if (msg.includes('0') && messageType !== 'location'){
+            await this.voltarAoMenuPrincipal(client, userId, user);
+            return;
+        }
+        else {
+            await client.sendText(userId, 'Você não enviou a localização! ⛔, tente novamente ou digite 0 para voltar ao menu!');
+            user.step = 2;
+            return;
+        }
+      }
+
+      if (user.step === 3) {
+        await client.sendText(userId, `Parabéns, atualmente você possui 150 capibas. Quer aproveitar melhor os diversos benefícios obtidos pelo capiba? Se informe melhor no site www.conectarecife.com/capiba`);
+        user.step = 0;
+        return;
+      }
+
+      if (user.step === 4) {
+        await client.sendText(userId, `Para informações diversas, acesse nosso site: www.conectarecife.com.br/recolhe`);
+        user.step = 0;
+        return;
+      }
+
+      if (user.step === 5) {
+        if (messageType === 'location') {
+            const { lat, lng } = message;
+
+            await client.sendText(userId, `📍 Localização recebida. Coordenadas de ${lat} (latitude) e ${lng} (longitude).
+            Para prosseguir com a denúncia, por favor, nos envie uma foto do local com descarte irregular.`);
+            user.step = 6;
+        } else if (msg.includes('0') && messageType !== 'location'){
+            await this.voltarAoMenuPrincipal(client, userId, user);
+            user.step = 0;
+            return;
+        }
+        else {
+            await client.sendText(userId, 'Você não a localização! ⛔, tente novamente ou digite 0 para voltar ao menu!');
+            user.step = 2;
+            return;
+        }
+        user.step = 6;
+        return;
+      }
+
+      if (user.step === 6) {
+        if(messageType === 'image') {
+            await client.sendText(userId, '📸 Processando imagem...');
+            await new Promise(resolve => setTimeout(resolve, 2000));
+            const imageBase64 = message.body;
+            const mimetype = message.mimetype;
+            await client.sendText(userId, `📸 Imagem recebida com sucesso! Agradecemos sua colaboração. Saiba que sua denúncia foi registrada com sucesso. Você receberá notificações sobre o andamento.
+            Você será redirecionado ao menu, obrigado.`);
+            await this.voltarAoMenuPrincipal(client, userId, user);
+            user.step = 0;
+            return;
+        } else if (msg.includes('0') && messageType !== 'image'){
+            await this.voltarAoMenuPrincipal(client, userId, user);
+            user.step = 0;
+            return;
+        }
+        else {
+            await client.sendText(userId, 'Você não enviou uma imagem válida! ⛔, tente novamente ou digite 0 para voltar ao menu!');
+            user.step = 6;
+            return;
+        }
+      }
+
+      if (user.step === 7) {
+        await client.sendText(userId, 'Procurando local mais próximo... 📍');
+        await new Promise(resolve => setTimeout(resolve, 2000));
+        await client.sendText(userId, `Centro de Artes e Comunicação da federal! 📍`);
+        await new Promise(resolve => setTimeout(resolve, 1500));
+        await this.voltarAoMenuPrincipal(client, userId, user);
       }
 
     //   if (user.step === 2) {
@@ -146,13 +213,15 @@ Confira as opções abaixo e escolha a que melhor atende à sua necessidade:
   }
 
   private async voltarAoMenuPrincipal(client: any, userId: string, user: UserState) {
-    await client.sendText(userId, `Bem-vindo(a)! Esse é o nosso sistema de atendimento do ReColhe.
-    Confira as opções abaixo e escolha a que melhor atende à sua necessidade:
-    1️⃣ Denunciar descarte irregular de resíduos
-    2️⃣ Encontrar pontos de descarte reciclável próximo
-    3️⃣ Verificar saldo
-    4️⃣ Dúvidas`);
-    user.step = 2;
+    await client.sendText(userId, 
+        `Bem-vindo(a)! Esse é o nosso sistema de atendimento do ReColhe.
+Confira as opções abaixo e escolha a que melhor atende à sua necessidade:
+1️⃣ Denunciar descarte irregular de resíduos
+2️⃣ Encontrar pontos de descarte reciclável próximo
+3️⃣ Verificar saldo
+4️⃣ Dúvidas`
+    );
+    user.step = 0;
   }
 
   private async verificarCadastro(userId: string): Promise<boolean> {
