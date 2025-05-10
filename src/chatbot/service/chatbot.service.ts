@@ -194,7 +194,9 @@ Confira as opções abaixo e escolha a que melhor atende à sua necessidade:
             if (user.step === 8) {
                 await client.sendText(userId, 'Procurando local mais próximo... 📍');
                 await new Promise(resolve => setTimeout(resolve, 2000));
-                await client.sendText(userId, `Centro de Artes e Comunicação da federal! 📍`);
+                const dumpsters = await this.dumpsterService.getNearbyDumpsters(user.latitude!, user.longitude!);
+                await client.sendText(userId, `Encontramos os seguintes pontos de descarte reciclável próximos: 
+                    ${dumpsters.map(dumpster => `- ${dumpster.address} | (${dumpster.tiporesiduo})`).join('\n')}`);
                 await new Promise(resolve => setTimeout(resolve, 1500));
                 await this.backToMenu(client, userId, user);
             }
