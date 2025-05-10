@@ -58,4 +58,4 @@ pids
 report.[0-9]*.[0-9]*.[0-9]*.[0-9]*.json
 
 # Service account file
-service-account.json
+src/config/serviceAccountKey.json

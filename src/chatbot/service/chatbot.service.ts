@@ -4,11 +4,16 @@ import { ComplaintService } from 'src/complaint/complaint.service';
 import { UserState } from '../../types/userState.type';
 import { getStorage } from 'firebase-admin/storage';
 import { UsersService } from 'src/users/users.service';
+import { DumpsterService } from 'src/dumpster/dumpster.service';
 const venom = require('venom-bot');
 
 @Injectable()
 export class ChatbotService implements OnModuleInit {
-    constructor(private readonly complaintService: ComplaintService, private readonly usersService: UsersService, ) {}
+    constructor(
+        private readonly complaintService: ComplaintService,
+        private readonly usersService: UsersService,
+        private readonly dumpsterService: DumpsterService,
+    ) {}
     private userStates: Record<string, UserState> = {};
 
     async onModuleInit() {
@@ -31,6 +36,7 @@ export class ChatbotService implements OnModuleInit {
             const userId = message.from;
             
             const messageType = message.type;
+            console.log(messageType)
             const msg = message.body.toLowerCase();
 
             if (!this.userStates[userId]) {
@@ -60,8 +66,8 @@ Confira as opções abaixo e escolha a que melhor atende à sua necessidade:
                 return;
             }
 
-            if (user.step === 1 || msg.includes('1') || msg.includes('denunciar') || msg.includes('denuncia') || msg.includes('descarte')) {
-                if (msg.includes('1') || msg.includes('denunciar') || msg.includes('denuncia') || msg.includes('descarte')) {
+            if (user.step === 1 || msg === '1') {
+                if (msg === '1') {
                     await client.sendText(
                         userId,
                         `Para registrar sua denúncia, precisamos da localização exata do descarte irregular. Você pode nos enviar sua localização atual pelo whatsapp.
@@ -69,7 +75,7 @@ Confira as opções abaixo e escolha a que melhor atende à sua necessidade:
                     );
                     user.step = 5;
                     return
-                } else if (msg.includes('0')) {
+                } else if (msg === '0') {
                     await this.backToMenu(client, userId, user);
                 }
                 else {
@@ -79,13 +85,12 @@ Confira as opções abaixo e escolha a que melhor atende à sua necessidade:
                 return;
             }
 
-            if (user.step === 2 || msg.includes('2') || msg.includes('pontos') || msg.includes('reciclavel') || msg.includes('reciclável')) {
-                if (messageType === 'location') {
-                    const { lat, lng } = message;
-                    await client.sendText(userId, `📍 Localização recebida. Coordenadas de ${lat} (latitude) e ${lng} (longitude).
-            Para prosseguir com a denúncia, por favor, nos envie uma foto do local com descarte irregular.`);
+            if (user.step === 2 || msg === '2') {
+                if ( msg === '2') {
+                    await client.sendText(userId, `Por favor nos envie sua localização atual para que possamos localizar os pontos de coleta mais próximos.`);
                     user.step = 7;
-                } else if (msg.includes('0') && messageType !== 'location') {
+                    return;
+                } else if (msg === '0' && messageType !== 'chat') {
                     await this.backToMenu(client, userId, user);
                     return;
                 }
@@ -96,7 +101,7 @@ Confira as opções abaixo e escolha a que melhor atende à sua necessidade:
                 }
             }
 
-            if (user.step === 3 || msg.includes('3') || msg.includes('saldo') || msg.includes('verificar')) {
+            if (user.step === 3 || msg === '3') {
                 const { balance, pendingBalance } = await this.usersService.getUserBalanceByPhone(userId.replace(/^55/, '').replace(/@c\.us$/, ''));
                 await client.sendText(userId, 
                     `Parabéns, você possui ${balance} capibas. Atualmente, você possui ${pendingBalance} capibas pendentes.
@@ -105,7 +110,7 @@ Confira as opções abaixo e escolha a que melhor atende à sua necessidade:
                 return;
             }
 
-            if (user.step === 4 || msg.includes('4') || msg.includes('duvidas') || msg.includes('dúvidas')) {
+            if (user.step === 4 || msg === '4') {
                 await client.sendText(userId, `Para informações diversas, acesse nosso site: www.conectarecife.com.br/recolhe`);
                 user.step = 0;
                 return;
@@ -120,7 +125,7 @@ Confira as opções abaixo e escolha a que melhor atende à sua necessidade:
                         `📍 Localização recebida. Coordenadas de ${lat} (latitude) e ${lng} (longitude).
                         Para prosseguir com a denúncia, por favor, nos envie uma foto do local com descarte irregular.`);
                     user.step = 6;
-                } else if (msg.includes('0') && messageType !== 'location') {
+                } else if (msg === '0' && messageType !== 'location') {
                     await this.backToMenu(client, userId, user);
                     user.step = 0;
                     return;
@@ -157,7 +162,7 @@ Confira as opções abaixo e escolha a que melhor atende à sua necessidade:
                     await this.backToMenu(client, userId, user);
                     user.step = 0;
                     return;
-                } else if (msg.includes('0') && messageType !== 'image') {
+                } else if (msg === '0' && messageType !== 'image') {
                     await this.backToMenu(client, userId, user);
                     user.step = 0;
                     return;
@@ -170,6 +175,23 @@ Confira as opções abaixo e escolha a que melhor atende à sua necessidade:
             }
 
             if (user.step === 7) {
+                console.log("to no stop")
+                if (messageType === 'location') {
+                    const { lat, lng } = message;
+                    await client.sendText(userId, `📍 Localização recebida. Coordenadas de ${lat} (latitude) e ${lng} (longitude).`);
+                    user.step = 8;
+                } else if (msg === '0' && messageType !== 'location') {
+                    await this.backToMenu(client, userId, user);
+                    return;
+                }
+                else {
+                    await client.sendText(userId, '⛔ Você não enviou a localização! Tente novamente ou digite 0 para voltar ao menu.');
+                    user.step = 7;
+                    return;
+                }
+            }
+
+            if (user.step === 8) {
                 await client.sendText(userId, 'Procurando local mais próximo... 📍');
                 await new Promise(resolve => setTimeout(resolve, 2000));
                 await client.sendText(userId, `Centro de Artes e Comunicação da federal! 📍`);
