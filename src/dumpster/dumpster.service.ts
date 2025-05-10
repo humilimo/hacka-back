@@ -27,8 +27,12 @@ export class DumpsterService {
              dumpsterLng >= searchLng - 0.01 && 
              dumpsterLng <= searchLng + 0.01;
     });
-
-    return filteredDumpsters;
+    const formattedDumpsters = filteredDumpsters.map(dumpster => ({
+      name: dumpster.nome,
+      address: dumpster.endereco,
+      tiporesiduo: dumpster.tiporesiduo,
+    }));
+    return formattedDumpsters;
   }
 
   async updateDumpster(id: string, weight: number) {
