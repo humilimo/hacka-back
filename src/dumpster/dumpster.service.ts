@@ -1,20 +1,13 @@
 import { Injectable } from '@nestjs/common';
 import { getFirestore } from 'firebase-admin/firestore';
-import { initializeApp, getApps } from 'firebase-admin/app';
-import { getAuth } from 'firebase-admin/auth';
+import { initializeFirebase } from '../config/firebase.config';
 
 @Injectable()
 export class DumpsterService {
   private firestore;
 
   constructor() {
-    if (!getApps().length) {
-      initializeApp({
-        projectId: "hacka-recolhe",
-        storageBucket: "hacka-recolhe.firebasestorage.app",
-      });
-    }
-    this.firestore = getFirestore();
+    this.firestore = initializeFirebase();
   }
 
   async getNearbyDumpsters(latitude: number | string, longitude: number | string) {
@@ -24,7 +17,7 @@ export class DumpsterService {
     
     const searchLat = typeof latitude === 'string' ? parseFloat(latitude) : latitude;
     const searchLng = typeof longitude === 'string' ? parseFloat(longitude) : longitude;
-        
+    
     const filteredDumpsters = dumpsters.filter(dumpster => {
       const dumpsterLat = parseFloat(dumpster.latitude);
       const dumpsterLng = parseFloat(dumpster.longitude);

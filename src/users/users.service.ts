@@ -1,20 +1,13 @@
 import { Injectable } from '@nestjs/common';
 import { getFirestore } from 'firebase-admin/firestore';
-import { initializeApp, getApps } from 'firebase-admin/app';
-import { getAuth } from 'firebase-admin/auth';
+import { initializeFirebase } from '../config/firebase.config';
 
 @Injectable()
 export class UsersService {
   private firestore;
 
   constructor() {
-    if (!getApps().length) {
-      initializeApp({
-        projectId: "hacka-recolhe",
-        storageBucket: "hacka-recolhe.firebasestorage.app",
-      });
-    }
-    this.firestore = getFirestore();
+    this.firestore = initializeFirebase();
   }
 
   async getUserBalanceByPhone(phoneNumber: string): Promise<{ balance: number, pendingBalance: number }> {
