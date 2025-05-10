@@ -6,6 +6,8 @@ import { getAuth } from 'firebase-admin/auth';
 import { ComplaintDto } from './dto/complaint.dto';
 import { firstValueFrom } from 'rxjs';
 import { NominatimResponse } from 'src/types/nominatim.type';
+import { getStorage } from 'firebase-admin/storage';
+
 @Injectable()
 export class ComplaintService {
   private firestore;
@@ -64,7 +66,7 @@ export class ComplaintService {
     }
   }
 
-  async reverseGeocode(lat: string, lon: string): Promise<String> {
+  async reverseGeocode(lat: string, lon: string): Promise<string> {
     const url = 'https://nominatim.openstreetmap.org/reverse';
     const params = {
       lat,

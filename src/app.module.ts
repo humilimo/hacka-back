@@ -1,4 +1,5 @@
 import { Module } from '@nestjs/common';
+import { ConfigModule } from '@nestjs/config';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { ChatbotModule } from './chatbot/service/chatbot.module';
@@ -10,7 +11,11 @@ import { DumpsterModule } from './dumpster/dumpster.module';
     ChatbotModule, 
     UsersModule,
     ComplaintModule,
-    DumpsterModule
+    DumpsterModule,
+    ConfigModule.forRoot({
+      envFilePath: '.env', // Path to your .env file
+      isGlobal: true, // Makes ConfigService available in all modules
+    }),
   ],
   controllers: [AppController],
   providers: [AppService],
