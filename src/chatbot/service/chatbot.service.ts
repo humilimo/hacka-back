@@ -178,6 +178,8 @@ Confira as opções abaixo e escolha a que melhor atende à sua necessidade:
                 console.log("to no stop")
                 if (messageType === 'location') {
                     const { lat, lng } = message;
+                    user.latitude = lat
+                    user.longitude = lng
                     await client.sendText(userId, `📍 Localização recebida. Coordenadas de ${lat} (latitude) e ${lng} (longitude).`);
                     user.step = 8;
                 } else if (msg === '0' && messageType !== 'location') {
@@ -195,6 +197,12 @@ Confira as opções abaixo e escolha a que melhor atende à sua necessidade:
                 await client.sendText(userId, 'Procurando local mais próximo... 📍');
                 await new Promise(resolve => setTimeout(resolve, 2000));
                 const dumpsters = await this.dumpsterService.getNearbyDumpsters(user.latitude!, user.longitude!);
+                console.log(dumpsters);
+                if (dumpsters.length === 0) {
+                    await client.sendText(userId, 'Desculpe, não encontramos pontos de descarte reciclável em um raio de 5 km.');
+                    await this.backToMenu(client, userId, user);
+                    return;
+                }
                 await client.sendText(userId, `Encontramos os seguintes pontos de descarte reciclável próximos: 
                     ${dumpsters.map(dumpster => `- ${dumpster.address} | (${dumpster.tiporesiduo})`).join('\n')}`);
                 await new Promise(resolve => setTimeout(resolve, 1500));

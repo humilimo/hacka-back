@@ -22,10 +22,10 @@ export class DumpsterService {
       const dumpsterLat = parseFloat(dumpster.latitude);
       const dumpsterLng = parseFloat(dumpster.longitude);
       
-      return dumpsterLat >= searchLat - 0.01 && 
-             dumpsterLat <= searchLat + 0.01 && 
-             dumpsterLng >= searchLng - 0.01 && 
-             dumpsterLng <= searchLng + 0.01;
+      return dumpsterLat >= searchLat - 1 && 
+             dumpsterLat <= searchLat + 1 && 
+             dumpsterLng >= searchLng - 1 && 
+             dumpsterLng <= searchLng + 1;
     });
     const formattedDumpsters = filteredDumpsters.map(dumpster => ({
       name: dumpster.nome,
